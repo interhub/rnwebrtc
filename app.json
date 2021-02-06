@@ -1,0 +1,12 @@
+{
+  "name": "rnwebrtc",
+  "displayName": "rnwebrtc",
+  "expo": {
+    "name": "rnwebrtc",
+    "slug": "rnwebrtc",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
