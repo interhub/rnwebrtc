@@ -1,31 +1,45 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Button, Platform, SafeAreaView, StatusBar, StyleSheet, View } from "react-native";
-import { mediaDevices, RTCView } from "react-native-webrtc";
+import { mediaDevices, RTCPeerConnection, RTCView } from "react-native-webrtc";
 import { Colors } from "react-native/Libraries/NewAppScreen";
 
 import { io } from "socket.io-client";
 
 const socket = io('http://192.168.0.101:3000');
 
-socket.on('call', (data: any) => {
-  console.log('CALL CLIENT MESSAGE', data, Platform.OS)
-})
-
 const callMessage = (data: any) => {
-  socket.emit('message', data)
+  pc.createOffer().then(desc => {
+    pc.setLocalDescription(desc).then(() => {
+      socket.emit('message', data)
+    });
+  });
+}
+
+const configuration: any = { "iceServers": [{ "url": "stun:stun.l.google.com:19302" }] };
+const pc = new RTCPeerConnection(configuration);
+
+pc.onicecandidate = ({ candidate }) => {
+  console.log('ADD CANDIDATE', candidate)
+  pc.addIceCandidate(candidate)
 }
 
 const App = () => {
 
   const [stream, setStream] = useState<any>(null);
 
-
-
   useEffect(() => {
     socket.on('call', (data: any) => {
       console.log('CALL CLIENT MESSAGE', data, Platform.OS)
-      setStream(data)
+      // setStream(data)
+      pc.setRemoteDescription(data)
+      pc.createAnswer().then((answer) => {
+        pc.setLocalDescription(answer)
+      })
     })
+
+    pc.onaddstream = (event) => {
+      setStream(event.stream)
+    }
   }, [])
 
   const start = async () => {
@@ -36,7 +50,7 @@ const App = () => {
     if (!stream) {
       try {
         const s: any = await mediaDevices.getUserMedia({ video: true });
-        // console.log('STREAM = ', s.toURL())
+        console.log('STREAM = ', s.toURL())
         // setStream(s.toURL()); 
         //s.toURL() - > ACCESS LOCATION FORMAT
         callMessage(s.toURL())
