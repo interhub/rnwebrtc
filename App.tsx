@@ -1,19 +1,46 @@
-import React, { useState } from "react";
-import { Button, SafeAreaView, StatusBar, StyleSheet, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Button, Platform, SafeAreaView, StatusBar, StyleSheet, View } from "react-native";
 import { mediaDevices, RTCView } from "react-native-webrtc";
 import { Colors } from "react-native/Libraries/NewAppScreen";
 
+import { io } from "socket.io-client";
+
+const socket = io('http://192.168.0.101:3000');
+
+socket.on('call', (data: any) => {
+  console.log('CALL CLIENT MESSAGE', data, Platform.OS)
+})
+
+const callMessage = (data: any) => {
+  socket.emit('message', data)
+}
+
 const App = () => {
+
   const [stream, setStream] = useState<any>(null);
+
+
+
+  useEffect(() => {
+    socket.on('call', (data: any) => {
+      console.log('CALL CLIENT MESSAGE', data, Platform.OS)
+      setStream(data)
+    })
+  }, [])
+
   const start = async () => {
     console.log('start');
+
     const devices = await mediaDevices.enumerateDevices();
     console.log(devices);
     if (!stream) {
-      let s;
       try {
-        s = await mediaDevices.getUserMedia({ video: true });
-        setStream(s);
+        const s: any = await mediaDevices.getUserMedia({ video: true });
+        // console.log('STREAM = ', s.toURL())
+        // setStream(s.toURL()); 
+        //s.toURL() - > ACCESS LOCATION FORMAT
+        callMessage(s.toURL())
+
       } catch (e) {
         console.error(e);
       }
@@ -30,12 +57,11 @@ const App = () => {
     <>
       <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.body}>
-        {
-          stream &&
+        {stream &&
           <RTCView
-            streamURL={stream.toURL()}
-            style={styles.stream} />
-        }
+            mirror={true}
+            streamURL={stream}
+            style={styles.stream} />}
         <View
           style={styles.footer}>
           <Button
