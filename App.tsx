@@ -4,7 +4,7 @@ import { io } from 'socket.io-client'
 import { RTCPeerConnection, RTCView, mediaDevices } from 'react-native-webrtc';
 
 const socket = io('http://192.168.0.101:3000')
-
+console.log('d')
 export default function App() {
   const [localStream, setLocalStream] = React.useState<any>();
   const [remoteStream, setRemoteStream] = React.useState<any>();
