@@ -1,13 +1,15 @@
 import React from 'react';
 import { View, SafeAreaView, Button, StyleSheet } from 'react-native';
-
+import { io } from 'socket.io-client'
 import { RTCPeerConnection, RTCView, mediaDevices } from 'react-native-webrtc';
 
+const socket = io('http://192.168.0.101:3000')
+
 export default function App() {
-  const [localStream, setLocalStream] = React.useState();
-  const [remoteStream, setRemoteStream] = React.useState();
-  const [cachedLocalPC, setCachedLocalPC] = React.useState();
-  const [cachedRemotePC, setCachedRemotePC] = React.useState();
+  const [localStream, setLocalStream] = React.useState<any>();
+  const [remoteStream, setRemoteStream] = React.useState<any>();
+  const [cachedLocalPC, setCachedLocalPC] = React.useState<any>();
+  const [cachedRemotePC, setCachedRemotePC] = React.useState<any>();
 
   const [isMuted, setIsMuted] = React.useState(false);
 
@@ -17,11 +19,9 @@ export default function App() {
     const devices = await mediaDevices.enumerateDevices();
 
     const facing = isFront ? 'front' : 'environment';
-    const videoSourceId = devices.find(
-      (device) => device.kind === 'videoinput' && device.facing === facing
-    );
+    const videoSourceId = devices.find((device: any) => device.kind === 'videoinput' && device.facing === facing);
     const facingMode = isFront ? 'user' : 'environment';
-    const constraints = {
+    const constraints: any = {
       audio: true,
       video: {
         mandatory: {
@@ -66,7 +66,7 @@ export default function App() {
         console.error(`Error adding localPC iceCandidate: ${err}`);
       }
     };
-    remotePC.onaddstream = (e) => {
+    remotePC.onaddstream = (e: any) => {
       console.log('remotePC tracking with ', e);
       if (e.stream && remoteStream !== e.stream) {
         console.log('RemotePC received the stream', e.stream);
@@ -98,7 +98,7 @@ export default function App() {
   };
 
   const switchCamera = () => {
-    localStream.getVideoTracks().forEach((track) => track._switchCamera());
+    localStream.getVideoTracks().forEach((track: any) => track._switchCamera());
   };
 
   // Mutes the local's outgoing audio
@@ -106,7 +106,7 @@ export default function App() {
     if (!remoteStream) {
       return;
     }
-    localStream.getAudioTracks().forEach((track) => {
+    localStream.getAudioTracks().forEach((track: any) => {
       console.log(track.enabled ? 'muting' : 'unmuting', ' local track', track);
       track.enabled = !track.enabled;
       setIsMuted(!track.enabled);
@@ -122,10 +122,10 @@ export default function App() {
       cachedRemotePC.removeStream(remoteStream);
       cachedRemotePC.close();
     }
-    setLocalStream();
-    setRemoteStream();
-    setCachedRemotePC();
-    setCachedLocalPC();
+    setLocalStream(null);
+    setRemoteStream(null);
+    setCachedRemotePC(null);
+    setCachedLocalPC(null);
   };
 
   return (
